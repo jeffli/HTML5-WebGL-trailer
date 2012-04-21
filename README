@@ -1,0 +1,8 @@
+This animation trailer was built with HTML5 WebGL and run in browser.
+
+To run it, first you need to make sure your browser supports WebGL, you may check it at get.webgl.org
+
+run with FireFox: you can just drop the studio6_trailer.html into browser
+
+run with Chrome: due to Chrome is very restrited in loading files from local driver, you need to move the whole folder to under a web server, such as ~/Sites/ if you use a Mac and check the 'Web Sharing' in 'System Preferences' -> 'Sharing';  then you can load the file in browser as http://localhost/~yourusernameInMac/HTML5-WebGL-trailer/mu_studio_trailer.html
+
