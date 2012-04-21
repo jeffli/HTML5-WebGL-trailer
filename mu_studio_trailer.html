@@ -1,0 +1,414 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>Studio 6</title>
+		<meta charset="utf-8">
+        <style>
+            body {
+                background-color: black;
+                margin: 0px;
+                padding: 0px;
+                overflow: hidden;
+            }
+        </style>
+	</head>
+
+	<body>
+ 		<div id="container"></div>
+
+ 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+
+		<script type="text/javascript" src="./js/Three.js"></script>
+
+		<script type="text/javascript" src="./js/Detector.js"></script>
+		<script type="text/javascript" src="./js/RequestAnimationFrame.js"></script>
+		<script type="text/javascript" src="./js/Stats.js"></script>
+
+ 		<script type="text/javascript" src="./fonts/helvetiker_bold.typeface.js"></script>
+
+		<script type="text/javascript">
+
+
+			// set the scene size
+			var WIDTH = $(window).width(),
+				HEIGHT = $(window).height();
+
+			// set some camera attributes
+			var VIEW_ANGLE = 45,
+				ASPECT = WIDTH / HEIGHT,
+				NEAR = 0.1,
+				FAR = 100000,
+                DISTANCE = 10000;
+
+			var CAMERA_Z = FAR/3,
+				STEP = 500;
+
+            var mouseX = mouseY = 0;
+
+
+            var currentSet = 1;
+
+			var $container = $('#container');
+
+			var renderer = new THREE.WebGLRenderer();
+			console.info(renderer)
+			var camera = new THREE.Camera(  VIEW_ANGLE,
+											ASPECT,
+											NEAR,
+											FAR  );
+			var cameraCube = new THREE.Camera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+
+			scene = new THREE.Scene();
+			sceneCube = new THREE.Scene();
+
+			camera.position.set( 0, 0, CAMERA_Z );
+			cameraCube.position.set( 0, 0, CAMERA_Z );
+
+            var path = "./images/skybox/";
+            var format = '.jpg';
+            var urls = [
+                path + 'px.jpg' , path + 'nx.jpg' ,
+                path + 'py.jpg' , path + 'ny.jpg' ,
+                path + 'pz.jpg' , path + 'nz.jpg'
+            ];
+
+
+            textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
+
+			// start the renderer
+			renderer.setSize(WIDTH, HEIGHT);
+		    renderer.autoClear = false;
+
+			// attach the render-supplied DOM element
+			$container.append(renderer.domElement);
+
+			// STATS
+/*
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.top = '0px';
+			stats.domElement.style.zIndex = 100;
+			$container.append( stats.domElement );
+*/
+            function startSet1(){
+                STEP = 300;
+
+                texts = [{txt: "Ready"}, {txt: "for the"}, {txt: "Ultimate"}, {txt: "Awesomeness!"}];
+                colors = [0x6DADE3, 0x5396CF, 0x3e81ba, 0x276DA8, 0x0F4E85];
+                current_text = 0;
+
+
+                light_sound = new Sound(['spot_light.wav'], FAR, 1);
+
+                addSet1Light ();
+
+                resetSet1 ();
+            }
+
+
+
+            function startSet2(){
+                for(var i=0; i<scene.objects.length; i++) {
+					scene.removeObject(scene.objects[i]);
+				}
+
+                thx_sound = new Sound(['THX.wav'], FAR, 1);
+				thx_sound.play();
+
+                currentSet = 2;
+
+                STEP = 1000;
+                CAMERA_Z = FAR;
+                camera.position.z = CAMERA_Z-3000;
+
+                var tunnelMaterial = new THREE.MeshBasicMaterial( { color: 0x181818, envMap: textureCube, refractionRatio: 0.95  } );
+                var tunnel = new THREE.Mesh( new THREE.CubeGeometry( FAR/1000, FAR/1000, FAR , 1, 1, 1, null, true )
+                           , tunnelMaterial);
+                tunnel.position.z = (FAR)/2;
+                sceneCube.addObject( tunnel );
+
+                sceneCube.fog = new THREE.FogExp2( 0xffffff, 0.0001 );
+            }
+
+
+
+            function startSet3(){
+                document.addEventListener('mousemove', onMouseMove, false);
+                document.addEventListener('click', onMouseClick, false);
+
+                for(var i=0; i<sceneCube.objects.length; i++) {
+					sceneCube.removeObject(sceneCube.objects[i]);
+				}
+
+                currentSet = 3;
+
+                STEP = 1000;
+                CAMERA_Z = FAR;
+                camera.position.z = CAMERA_Z / 2;
+                camera.position.y = 800;
+                cameraCube.position.z = CAMERA_Z ;
+                cameraCube.position.y = 800;
+
+
+                skyMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube, refractionRatio: 0.95 } );
+
+                var sky = new THREE.Mesh( new THREE.CubeGeometry( FAR*2, FAR*2, FAR*2, 1, 1, 1, null, true ),
+                          skyMaterial );
+                sky.position.z = FAR/2;
+                sceneCube.addObject( sky );
+
+                sceneCube.fog = new THREE.FogExp2( 0xffffff, 0.0001 );
+
+                addText ({txt: "    Studio 6"}, {txt:"\u03BC", params: {size:WIDTH/3, height:HEIGHT/3}});
+            }
+
+            startSet1();
+            //startSet2();
+            //startSet3();
+
+
+			animate();
+
+
+			function animate(){
+				requestAnimationFrame( animate );
+    			draw();
+			}
+
+			function draw() {
+/*
+				cameraCube.target.position.x = - camera.position.x;
+				cameraCube.target.position.y = - camera.position.y;
+				cameraCube.target.position.z = - camera.position.z;
+*/
+
+                camera.position.z -= STEP;
+
+                if(currentSet == 1){
+                    if(camera.position.z < DISTANCE*2){
+                        light.color = new THREE.Color(colors[current_text]);
+                        //light.color = new THREE.Color(0x276DA8);
+                        light_sound.play();
+                    }
+
+                    if(camera.position.z < DISTANCE-50 && current_text == texts.length){
+                        startSet2();
+                    } else if(camera.position.z <= -100){
+                        resetSet1();
+                    }
+                }else if(currentSet == 2){
+                   if( camera.position.z < FAR && camera.position.z >= 20000){
+                       var density = (1-Math.abs(camera.position.z/FAR)) * 0.001;
+                        sceneCube.fog.density = Math.max(sceneCube.fog.density, density );
+
+                    } else if ( camera.position.z < 20000 && camera.position.z >= 1000){
+                        STEP = 300;
+                        var density = (1-Math.abs(camera.position.z/20000)) * 0.01;
+                        sceneCube.fog.density = Math.max(sceneCube.fog.density, density );
+
+                    }else if(camera.position.z < 1000 && camera.position.z >= 100){
+                        STEP = 100;
+                        camera.position.z = Math.max(50, camera.position.z);
+                        var density = (1-Math.abs(camera.position.z/1000)) * 0.05;
+                        sceneCube.fog.density = Math.max(sceneCube.fog.density, density );
+
+                    }else if(camera.position.z < 100){
+                        startSet3();
+                    }
+
+                    cameraCube.position.z = camera.position.z;
+                }else{
+                    sceneCube.fog.density =  0.00001;
+
+                    cameraCube.position.z = camera.position.z =  Math.max(DISTANCE + 3000,  camera.position.z);
+
+
+                    if( cameraCube.position.z == (DISTANCE + 3000)){
+
+                        camera.position.x += ( mouseX - camera.position.x ) * .1;
+                        camera.position.y += ( - mouseY - camera.position.y ) * .1;
+
+
+                        cameraCube.position.x += ( mouseX - camera.position.x ) * 0.4;
+                        cameraCube.position.y += ( - mouseY - camera.position.y ) * 0.4;
+
+                    }
+
+
+                }
+
+				//stats.update();
+				try{
+					renderer.clear();
+					renderer.render( sceneCube, cameraCube );
+					renderer.render(scene, camera);
+				}catch(e){ 
+					console.info(e);
+				}
+				
+				
+			}
+
+			function addSet1Light (){
+
+				light = new THREE.SpotLight( 0x00ff00 );
+				light.position.set( 0, 200, DISTANCE+200 );
+				light.target.position.set( 0, 0, DISTANCE );
+				light.intensity = 1;
+				light.castShadow = true;
+				scene.addLight( light );
+			}
+
+            function resetSet1 (){
+				for(var i=0; i<scene.objects.length; i++) {
+					scene.removeObject(scene.objects[i]);
+				}
+
+				light.color = new THREE.Color(0x222222);
+				camera.position.z = CAMERA_Z;
+
+                light_sound.pause();
+                light_sound = new Sound(['spot_light.wav'], FAR, 1);
+
+
+
+				if(current_text < texts.length){
+					addText(texts[current_text++]);
+				}else{
+                    startSet2();
+				}
+
+			}
+
+			function addText(){
+				var params = {
+					size: WIDTH/4,
+					height: HEIGHT/4,
+					curveSegments: 12,
+
+					font: "helvetiker",
+					weight: "bold",
+					style: "normal",
+
+					bevelThickness: 3,
+					bevelSize: 5,
+					bevelEnabled: true
+
+				};
+
+                xOffset = yOffset = null;
+
+
+				var textMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, ambient: 0x001100 } );
+                if(currentSet != 1){
+                    textMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube, refractionRatio: 0.6 } );
+                    muMaterial = new THREE.MeshBasicMaterial( { color: 0xff8100, envMap: textureCube, refractionRatio: 0.8 } );
+                }
+
+
+				for(var i=0; i<arguments.length; i++){
+					var obj = arguments[i];
+
+					var txt = new THREE.TextGeometry( obj.txt, $.extend(params, obj.params));
+                    var material = textMaterial;
+
+                    if(obj.txt == "\u03BC"){
+                        material = muMaterial;
+                    }
+
+					if(xOffset == null){
+						txt.computeBoundingBox();
+						xOffset = -0.5 * ( txt.boundingBox.x[ 1 ] - txt.boundingBox.x[ 0 ] );
+		                yOffset = -0.5 * ( txt.boundingBox.y[ 1 ] - txt.boundingBox.y[ 0 ] );
+					}
+
+
+					letters = new THREE.Mesh( txt, material );
+					letters.position.x = xOffset;
+					letters.position.y = yOffset;
+					letters.position.z = DISTANCE;
+
+					letters.castShadow = true;
+					letters.receiveShadow = true;
+
+					scene.addObject( letters );
+
+				}
+			}
+
+			function onMouseMove(event) {
+
+				mouseX = ( event.clientX - WIDTH/2 ) * 2;
+				mouseY = ( event.clientY - HEIGHT/2 ) * 2;
+
+			}
+
+			function onMouseClick(event) {
+
+				window.top.loadDone = true;
+                window.top.load();
+
+			}
+
+        function Sound ( sources, radius, volume ) {
+
+			audio = document.createElement( 'audio' );
+
+			for ( var i = 0; i < sources.length; i ++ ) {
+
+				var source = document.createElement( 'source' );
+				source.src = sources[ i ];
+				source.loop = false;
+
+				audio.appendChild( source );
+
+			}
+			audio.load();
+
+			this.position = new THREE.Vector3();
+
+			this.play = function () {
+                if(audio.currentTime <= 0){
+                    audio.play();
+                }
+			}
+
+			this.pause = function () {
+				audio.pause();
+			}
+
+			this.current = function () {
+				console.info(audio.currentTime)
+			}
+
+			this.rewind = function (time) {
+				try{
+					audio.currentTime = time;
+				}catch(e){
+					console.info(e);
+				}
+			}
+
+			this.update = function ( camera ) {
+
+				var distance = this.position.distanceTo( camera.position );
+
+				if ( distance <= radius ) {
+
+					//audio.volume = volume * ( 1 - distance / radius );
+
+				} else {
+
+					//audio.volume = 0;
+
+				}
+
+			}
+
+		}
+
+
+		</script>
+
+	</body>
+</html>
